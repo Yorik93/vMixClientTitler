@@ -1,0 +1,28 @@
+[
+    {
+        "@key": null,
+        "@title": null,
+        "data": []
+    },
+    {
+        "@key": "03350148-e4b9-483e-9c27-c09c056e44f9",
+        "@title": "GEO",
+        "data": [
+            {
+                "@name": "Arena.Text",
+                "#text": "multifunctional sports complex «Tula-Arena»",
+                "Переменная": null
+            },
+            {
+                "@name": "City.Text",
+                "#text": "TULA REGION, RUSSIA",
+                "Переменная": null
+            },
+            {
+                "@name": "Data.Text",
+                "#text": "23 DECEMBER 2022",
+                "Переменная": null
+            }
+        ]
+    }
+]

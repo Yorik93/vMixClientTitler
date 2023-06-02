@@ -1,0 +1,86 @@
+[
+    {
+        "@title": "GEO",
+        "@key": "03350148-e4b9-483e-9c27-c09c056e44f9",
+        "@name": "Arena.Text",
+        "#text": "02 June 2023",
+        "Переменная": "_дата компьютера"
+    },
+    {
+        "@title": "GEO",
+        "@key": "03350148-e4b9-483e-9c27-c09c056e44f9",
+        "@name": "City.Text",
+        "#text": "TULA REGION, RUSSIA",
+        "Переменная": null
+    },
+    {
+        "@title": "GEO",
+        "@key": "03350148-e4b9-483e-9c27-c09c056e44f9",
+        "@name": "Data.Text",
+        "#text": "23 DECEMBER 2022",
+        "Переменная": null
+    },
+    {
+        "@title": "GEO",
+        "@key": "03350148-e4b9-483e-9c27-c09c056e44f9",
+        "@name": "Image1.Source",
+        "#text": "f6e3f9a1-f4a3-4b73-bba1-fd4bebc69770\\VPS23_title_GEO_00000.png",
+        "Переменная": null
+    },
+    {
+        "@title": "ID",
+        "@key": "04251448-2c4f-4a05-94c6-533523c1b382",
+        "@name": "Team1.Text",
+        "#text": "DYNAMO",
+        "Переменная": null
+    },
+    {
+        "@title": "ID",
+        "@key": "04251448-2c4f-4a05-94c6-533523c1b382",
+        "@name": "City1.Text",
+        "#text": "MOSCOW",
+        "Переменная": null
+    },
+    {
+        "@title": "ID",
+        "@key": "04251448-2c4f-4a05-94c6-533523c1b382",
+        "@name": "Team2.Text",
+        "#text": "Neftyanik",
+        "Переменная": null
+    },
+    {
+        "@title": "ID",
+        "@key": "04251448-2c4f-4a05-94c6-533523c1b382",
+        "@name": "City2.Text",
+        "#text": "Orenburg",
+        "Переменная": null
+    },
+    {
+        "@title": "ID",
+        "@key": "04251448-2c4f-4a05-94c6-533523c1b382",
+        "@name": "Location.Text",
+        "#text": "29 DECEMBER 2022 - «Dynamo Volleyball Arena»",
+        "Переменная": null
+    },
+    {
+        "@title": "ID",
+        "@key": "04251448-2c4f-4a05-94c6-533523c1b382",
+        "@name": "Logo1.Source",
+        "#text": "C:\\Графика\\ВОЛЕЙБОЛ\\TEAM_LOGOS\\Dynamo_Moscow.png",
+        "Переменная": null
+    },
+    {
+        "@title": "ID",
+        "@key": "04251448-2c4f-4a05-94c6-533523c1b382",
+        "@name": "Logo2.Source",
+        "#text": "C:\\Графика\\ВОЛЕЙБОЛ\\TEAM_LOGOS\\Neftyanik.png",
+        "Переменная": null
+    },
+    {
+        "@title": "ID",
+        "@key": "04251448-2c4f-4a05-94c6-533523c1b382",
+        "@name": "Image1.Source",
+        "#text": "d9ceda56-f367-4f8c-9503-d9b7941bcdb2\\VPS23_TAB_Startmatch_00000.png",
+        "Переменная": null
+    }
+]

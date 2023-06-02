@@ -1,0 +1,18 @@
+[
+    {
+        "Переменная": "дата компьютера",
+        "Текст": "datetime.now().strftime('%d %B %Y')"
+    },
+    {
+        "Переменная": "имя сплит",
+        "Текст": "'НиЧеГо' if 'имя' not in st.session_state['data'] else st.session_state['data']['имя'].split() if ' ' in st.session_state['data']['имя'] else st.session_state['data']['имя']"
+    },
+    {
+        "Переменная": "арена",
+        "Текст": "'Арена Нижнего Новгорода'"
+    },
+    {
+        "Переменная": "число",
+        "Текст": "int(10)"
+    }
+]
