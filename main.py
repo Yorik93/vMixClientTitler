@@ -3,13 +3,10 @@ import pandas as pd
 import requests
 import os
 import json
-from st_aggrid import AgGrid, GridUpdateMode, ColumnsAutoSizeMode
+from st_aggrid import AgGrid, GridUpdateMode
 from st_aggrid.grid_options_builder import GridOptionsBuilder
-from bs4 import BeautifulSoup
 import xmltodict
-from concurrent.futures import ThreadPoolExecutor
 
-import func_caspar as fc
 import funcs as fs
 
 # from streamlit_extras.add_vertical_space import add_vertical_space
@@ -20,39 +17,8 @@ st.set_page_config(
     page_icon="📠",
     layout="wide",
     initial_sidebar_state="expanded",
-    menu_items={"About": "версия 2023.05 от 31.05.2023"},
+    menu_items={"About": "версия 2023.06 от 05.06.2023"},
 )
-
-columns = [
-    "Start NR",
-    "Primary score",
-    "Match shot",
-    "Firingpoint",
-    "Secondarv score",
-    "DivisionS",
-    "Time",
-    "Innerten",
-    "X",
-    "Y",
-    "Intime",
-    "Time since change",
-    "Sween direction",
-    "Demonstration",
-    "Shoot",
-    "Practice",
-    "InsDel",
-    "Totalkind",
-    "Group",
-    "Firekind",
-    "Logevent",
-    "Logtype",
-    "Time_1",
-    "Relay",
-    "Weapon",
-    "Position",
-    "TargetID",
-    "External number",
-]
 
 
 # Функция для отправки команды к vMix по API
@@ -68,11 +34,11 @@ def send_command(command):
 
 def post_url(i):
     requests.post(
-        f"http://10.10.0.149:8088/titles/?key={i['@key']}",
+        f"http://127.0.0.1:8088/titles/?key={i['@key']}",
         data={f'txt{i["@name"]}': i["#text"], "Update": "Update"},
     )
     print(
-        f"http://10.10.0.149:8088/titles/?key={i['@key']}",
+        f"http://127.0.0.1:8088/titles/?key={i['@key']}",
         {f'txt{i["@name"]}': i["#text"], "Update": "Update"},
     )
 
@@ -84,7 +50,7 @@ def update_data(upd_data):
         post_url(i)
         print(i)
 
-    # url = f"http://10.10.0.149:8088/titles/?key={i['@key']}"
+    # url = f"http://127.0.0.1:8088/titles/?key={i['@key']}"
 
     # res = requests.post(
     #     url, data={f'txt{upd_data["@name"]}': upd_data["#text"], "Update": "Update"}
@@ -93,11 +59,11 @@ def update_data(upd_data):
 
 
 def connect_vmix():
-    url_api = "http://10.10.0.149:8088/api"
+    url_api = "http://127.0.0.1:8088/api"
     response = requests.get(url_api)
     data_dict = xmltodict.parse(response.text)
-    with open("preset.json", "w", encoding="utf-8") as f:
-        json.dump(data_dict, f, ensure_ascii=False, indent=4)
+    # with open("vMixClientTitler/preset.json", "w", encoding="utf-8") as f:
+    #     json.dump(data_dict, f, ensure_ascii=False, indent=4)
     return data_dict
 
 
@@ -105,7 +71,8 @@ def scenario_get_json(path_scenario_json):
     if os.path.exists(path_scenario_json):
         scenario_json = fs.load_json_data(path_scenario_json)
     else:
-        scenario_json = [{"@key": None, "@title": None, "data": []}]
+        # scenario_json = [{"@key": None, "@title": None, "data": []}]
+        scenario_json = []
         with open(path_scenario_json, "w", encoding="utf-8") as outfile:
             json.dump(scenario_json, outfile, ensure_ascii=False, indent=4)
     return scenario_json
@@ -113,17 +80,17 @@ def scenario_get_json(path_scenario_json):
 
 def main():
     variable_json = "vMixClientTitler/variables.json"
-    path_scenario_json = "vMixClientTitler/scenario.json"
     st.session_state["data"] = None
 
     placeholder = st.empty()
     c = placeholder.container()
-    tab_editor, tab_variable, tab_cash, tab_titles = c.tabs(
+    tab_editor, tab_variable, tab_cash, tab_titles, tab_buttons = c.tabs(
         [
             "Редактор",
             "Переменные",
             "Кэш-данные",
             "Список титров",
+            "Кнопки",
         ]
     )
 
@@ -132,7 +99,9 @@ def main():
         with ed_editor_col1:
             with st.expander("Загрузка файла"):
                 uploaded_file = st.file_uploader(
-                    "Choose a Excel file", type=["xlsx", "csv"], accept_multiple_files=False
+                    "Choose a Excel file",
+                    type=["xlsx", "csv"],
+                    accept_multiple_files=False,
                 )
         with ed_editor_col2:
             with st.expander("Название колонок Excel, если нету файла"):
@@ -143,11 +112,12 @@ def main():
                     temp_columns[temp_col] = None
 
         if uploaded_file is not None:
-            if uploaded_file.name.split('.')[1] == "xlsx":
+            if uploaded_file.name.split(".")[1] == "xlsx":
                 df = fs.load_data(uploaded_file)
             else:
-                df = pd.read_csv(uploaded_file, sep=";", header=None, names=columns)
-            
+                # df = pd.read_csv(uploaded_file, sep=";", header=None, names=columns)
+                df = pd.read_csv(uploaded_file)
+
         else:
             df = pd.DataFrame([temp_columns])
         temp_data = {}
@@ -193,9 +163,7 @@ def main():
                     {"Переменная": "", "Текст": ""},
                 ]
             )
-        var_df = st.experimental_data_editor(
-            df, num_rows="dynamic", use_container_width=True
-        )
+        var_df = st.data_editor(df, num_rows="dynamic", use_container_width=True)
         var_json = var_df.to_json(orient="records")
         var_json = json.loads(var_json)
         if variable_add_button:
@@ -215,182 +183,118 @@ def main():
 
     with tab_titles:
         titles_col1, titles_col2 = st.columns((1.5, 8.5))
-        data_dict = connect_vmix()
+        try:
+            data_dict = connect_vmix()
+            temp_name = data_dict["vmix"]["preset"].split("\\")[-1].replace(".vmix", "")
+            path_scenario_json = f"vMixClientTitler/scenario_{temp_name}.json"
 
-        # if os.path.exists(path_scenario_json):
-        #     scenario_json = fs.load_json_data(path_scenario_json)
-        # else:
-        #     scenario_json = {"@key": None, "@title": None, "data": []}
-        #     with open(path_scenario_json, "w", encoding="utf-8") as outfile:
-        #         json.dump(scenario_json, outfile, ensure_ascii=False, indent=4)
+            scenario_json = scenario_get_json(path_scenario_json)
+            inputs = data_dict["vmix"]["inputs"]["input"]
 
-        inputs = data_dict["vmix"]["inputs"]["input"]
-        temp_data_input = []
-        for i in inputs:
-            key_input = i["@key"]
-            name_input = i["#text"]
-            text_input = (
-                [None]
-                if "text" not in i
-                else i["text"]
-                if type(i["text"]) is list
-                else [i["text"]]
-            )
-            image_input = (
-                [None]
-                if "image" not in i
-                else i["image"]
-                if type(i["image"]) is list
-                else [i["image"]]
-            )
-            temp_data_input.append(
-                {
-                    "@key": key_input,
-                    "#text": name_input,
-                    "data": [
-                        text_input if len(text_input) > 0 else None,
-                        image_input if len(image_input) > 0 else None,
-                    ],
-                }
-            )
-        df_1 = pd.json_normalize(temp_data_input)
-        select_title = titles_col1.selectbox("Список титров:", df_1["#text"])
-        selected_row = df_1.loc[df_1["#text"] == select_title]
-        # print(selected_row["@key"].values[0])
-        save_change_data = titles_col1.button("Сохранить изменения")
-        new_categories = [i for i in st.session_state["data"]]
-        for i in temp_data_input:
-            if i["#text"] == select_title:
-                df_2 = pd.json_normalize(i["data"][0])
-                df_2["Переменная"] = ""
-                df_2["Переменная"] = df_2["Переменная"].astype("category")
-                df_2["Переменная"] = pd.Categorical(
-                    df_2["Переменная"], categories=new_categories
+            temp_data_input = []
+            for i in inputs:
+                key_input = i["@key"]
+                name_input = i["#text"]
+                text_input = (
+                    [None]
+                    if "text" not in i
+                    else i["text"]
+                    if type(i["text"]) is list
+                    else [i["text"]]
+                )
+                image_input = (
+                    [None]
+                    if "image" not in i
+                    else i["image"]
+                    if type(i["image"]) is list
+                    else [i["image"]]
+                )
+                if scenario_json != []:
+                    for scen_i in scenario_json:
+                        if scen_i["@key"] == key_input:
+                            text_input = scen_i["data"]
+                temp_data_input.append(
+                    {
+                        "@key": key_input,
+                        "#text": name_input,
+                        "data": [
+                            text_input if len(text_input) > 0 else None,
+                            image_input if len(image_input) > 0 else None,
+                        ],
+                    }
                 )
 
-        with titles_col2:
-            df_2 = df_2.drop("@index", axis=1)
-            df_3 = st.experimental_data_editor(
-                df_2, use_container_width=True, height=700
-            )
+            df_1 = pd.json_normalize(temp_data_input)
+            select_title = titles_col1.selectbox("Список титров:", df_1["#text"])
+            selected_row = df_1.loc[df_1["#text"] == select_title]
+            save_change_data = titles_col1.button("Сохранить изменения")
+            new_categories = [i for i in st.session_state["data"]]
+            for i in temp_data_input:
+                if i["#text"] == select_title:
+                    if i["data"][0] != None:
+                        df_2 = pd.json_normalize(i["data"][0])
+                        if "Переменная" not in df_2:
+                            df_2["Переменная"] = None
+                        # df_2["Переменная"] = df_2["Переменная"].astype("category")
+                        # df_2["Переменная"] = pd.Categorical(
+                        #     df_2["Переменная"], categories=new_categories
+                        # )
 
-        if save_change_data:
-            scenario_json = scenario_get_json(path_scenario_json)
-            json_change = df_3.to_json(orient="records")
-            json_change = json.loads(json_change)
-            # print(scenario_json)
-            print("="*100)
-            print(selected_row["@key"].values[0])
-            print(scenario_json)
-            for i in scenario_json:
-                if i["@key"] == selected_row["@key"].values[0]:
-                    i["data"] = json_change
-                    print("Ключ есть такой")
-                    break
-                # else:
-                #     scenario_json.append(
-                #         {
-                #             "@key": selected_row["@key"].values[0],
-                #             "@title": selected_row["#text"].values[0],
-                #             "data": json_change,
-                #         }
-                #     )                    
-                #     print(i["@key"], "ключа такого нет")
-                #     break
-            with open(path_scenario_json, "w", encoding="utf-8") as outfile:
-                json.dump(scenario_json, outfile, ensure_ascii=False, indent=4)
-            # print(scenario_json[0].get(selected_row["@key"].values[0]))
-            
-            # for i in scenario_json:
-            #     if i["@key"] == selected_row["@key"].values[0]:
-            #         i["data"] = json_change
-            #         break
-            #     else:
-            #         scenario_json.append(
-            #             {
-            #                 "@key": selected_row["@key"].values[0],
-            #                 "@title": selected_row["#text"].values[0],
-            #                 "data": json_change,
-            #             }
-            #         )
-            # if selected_row["@key"].values[0] in scenario_json:
-            #     print("TCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")
+            with titles_col2:
+                if "@index" in df_2:
+                    df_2 = df_2.drop("@index", axis=1)
+                if len(df_2.columns) > 1:
+                    df_3 = st.data_editor(
+                        df_2,
+                        column_config={
+                            "@name": st.column_config.Column(
+                                width="medium",
+                            ),
+                            "#text": st.column_config.Column(
+                                width="large",
+                            ),
+                            "Переменная": st.column_config.SelectboxColumn(
+                                width="large",
+                                options=new_categories,
+                            ),
+                        },
+                        height=None
+                        if len(df_2.values) <= 10
+                        else 39 * len(df_2.values),
+                        use_container_width=True,
+                    )
+                else:
+                    st.info("Изменяемых данных нет")
 
-            # for i in scenario_json:
-            #     # print(i, "====================================")
-            #     print(i["@key"], selected_row["@key"].values[0], "====================================")
-            #     if i["@key"] == selected_row["@key"].values[0]:
-            #         i["data"] = json_change
-            #         continue
-            #     else:
-            #         scenario_json.append(
-            #             {
-            #                 "@key": selected_row["@key"].values[0],
-            #                 "@title": selected_row["#text"].values[0],
-            #                 "data": json_change,
-            #             }
-            #         )
-            #         continue
-            #         # scenario_json["@key"] = selected_row["@key"].values[0]
-            #         # scenario_json["@title"] = selected_row["#text"].values[0]
-            #         # scenario_json["data"] = json_change
+            if save_change_data:
+                try:
+                    json_change = df_3.to_json(orient="records")
+                    json_change = json.loads(json_change)
 
-            # print(scenario_json, "++++++++++++++++++++++++++")
+                    for i in scenario_json:
+                        if i["@key"] == selected_row["@key"].values[0]:
+                            i["data"] = json_change
+                            break
+                    else:
+                        scenario_json.append(
+                            {
+                                "@key": selected_row["@key"].values[0],
+                                "@title": selected_row["#text"].values[0],
+                                "data": json_change,
+                            }
+                        )
 
-            # print()
-            # print(scenario_json)
-            # print()
-            # print(json_change)
+                    with open(path_scenario_json, "w", encoding="utf-8") as outfile:
+                        json.dump(scenario_json, outfile, ensure_ascii=False, indent=4)
+                    titles_col1.success("Данные сохранены")
+                except UnboundLocalError:
+                    titles_col1.error("Нельзя сохранить")
 
-    #     df_1 = pd.json_normalize(rows)
+        except requests.exceptions.ConnectionError:
+            st.error("Не включен vMix")
 
-    #     df_1["Переменная"] = df_1["Переменная"].astype("category")
-    #     df_1["Переменная"] = pd.Categorical(
-    #         df_1["Переменная"], categories=new_categories
-    #     )
-
-    #     # gd = GridOptionsBuilder.from_dataframe(df_1)
-
-    #     # gridoptions = {
-    #     #     "columnDefs": [
-    #     #         {"field": "@title", "rowGroup": True, "hide": True},
-    #     #         {"field": "@name"},
-    #     #         {"field": "#text", "editable": True},
-    #     #         {
-    #     #             "field": "Переменная",
-    #     #             "editable": True,
-    #     #             "cellEditor": "agSelectCellEditor",
-    #     #             "cellEditorParams": {"values": new_categories},
-    #     #         },
-    #     #         {"field": "@key", "hide": True},
-    #     #     ]
-    #     # }
-
-    #     # new_data_api = AgGrid(
-    #     #     df_1,
-    #     #     gridOptions=gridoptions,
-    #     #     columns_auto_size_mode=ColumnsAutoSizeMode.FIT_ALL_COLUMNS_TO_VIEW,
-    #     # )
-    #     if save_button_data_api:
-    #         new_json = new_data_api.to_json(orient="records")
-    #         # new_json = new_data_api.data.to_json(orient="records")
-    #         new_json = json.loads(new_json)
-
-    #         temp_cash_data = st.session_state["data"]
-    #         for i in new_json:
-    #             for j in temp_cash_data:
-    #                 if i["Переменная"] == j:
-    #                     print(["Переменная"], j, '++++++++++++++++++++++++++++++++++++')
-    #                     i["#text"] = temp_cash_data[j]
-    #         with open(
-    #             "vMixClientTitler/test_json.json",
-    #             "w",
-    #             encoding="utf-8",
-    #         ) as outfile:
-    #             json.dump(new_json, outfile, ensure_ascii=False, indent=4)
-
-    #         update_data(new_json)
-    #         print("все готово11111111122222222222111")
+    with tab_buttons:
+        pass
 
 
 if __name__ == "__main__":
