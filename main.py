@@ -86,25 +86,25 @@ def main():
     c = placeholder.container()
     tab_editor, tab_variable, tab_cash, tab_titles, tab_buttons = c.tabs(
         [
-            "Редактор",
-            "Переменные",
-            "Кэш-данные",
-            "Список титров",
-            "Кнопки",
+            "✏️Редактор",
+            "📝Переменные",
+            "🗄️Кэш-данные",
+            "📝Список титров",
+            "✅Кнопки",
         ]
     )
 
     with tab_editor:
         ed_editor_col1, ed_editor_col2 = st.columns((5, 5))
         with ed_editor_col1:
-            with st.expander("Загрузка файла"):
+            with st.expander("📁Загрузка файла"):
                 uploaded_file = st.file_uploader(
-                    "Choose a Excel file",
+                    "Выбрать Excel файл",
                     type=["xlsx", "csv"],
                     accept_multiple_files=False,
                 )
         with ed_editor_col2:
-            with st.expander("Название колонок Excel, если нету файла"):
+            with st.expander("🔠Название колонок Excel, если нету файла"):
                 count_columns = st.number_input("Кол-во колонок", min_value=1, value=1)
                 temp_columns = {}
                 for i in range(count_columns):
@@ -143,14 +143,14 @@ def main():
             st.session_state["data"] = data[0]
 
     with tab_variable:
-        with st.expander("Примеры"):
+        with st.expander("🔣Примеры"):
             code_example = "'НиЧеГо' if 'имя' not in d$ else d$['имя'].split() if ' ' in d$['имя'] else d$['имя']"
             st.write(
                 "Пример: пишем слово 'НиЧеГо' если такой переменной в нашем массиве данных нет. Далее мы делаем сплит по пробелу, если пробел в ключе существует. И последний else - в любом другом случае, например, будет одно слово в переменной"
             )
             st.code(code_example, language="python")
         variable_col1, variable_col2 = st.columns((2, 8))
-        variable_add_button = variable_col1.button("Добавить запись")
+        variable_add_button = variable_col1.button("💾Добавить запись")
         variable_col2.markdown(
             "Чтобы использовать переменную, созданную в Кэш-данных или с помощью ручных переменных достаточно написать в формате: **:green[d$['здесь пишем полностью название переменной']]** "
         )
@@ -227,7 +227,7 @@ def main():
             df_1 = pd.json_normalize(temp_data_input)
             select_title = titles_col1.selectbox("Список титров:", df_1["#text"])
             selected_row = df_1.loc[df_1["#text"] == select_title]
-            save_change_data = titles_col1.button("Сохранить изменения")
+            save_change_data = titles_col1.button("💾Сохранить изменения")
             new_categories = [i for i in st.session_state["data"]]
             for i in temp_data_input:
                 if i["#text"] == select_title:
