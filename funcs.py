@@ -3,6 +3,7 @@ import pandas as pd
 import json
 from io import BytesIO
 from datetime import datetime
+import base64
 
 
 @st.cache_data
@@ -52,3 +53,10 @@ def to_excel(df):
     writer.close()
     processed_data = output.getvalue()
     return processed_data
+
+
+def ReadPictureFile(wch_fl):
+    try:
+        return base64.b64encode(open(wch_fl, "rb").read()).decode()
+    except:
+        return ""
