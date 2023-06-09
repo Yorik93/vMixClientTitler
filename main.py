@@ -8,6 +8,9 @@ from st_aggrid.grid_options_builder import GridOptionsBuilder
 import xmltodict
 import funcs as fs
 from datetime import datetime
+import keyboard
+import base64
+
 
 
 st.set_page_config(
@@ -34,22 +37,21 @@ def post_url(btn, path):
     scenario_json = scenario_get_json(path)
     data = None
     key = None
+    number = None
     for i in scenario_json:
         if i["@title"] == btn:
+            print()
             data = i["data"]
             key = i["@key"]
+            number = i["@number"]
     new_data = {}
     for i in data:
         i["@name"] = f'txt{i["@name"]}'
         new_data[i["@name"]] = i["#text"]
     new_data["Update"] = "Update"
     print(f"http://127.0.0.1:8088/titles/?key={key}", new_data)
-    result = requests.post(
-        f"http://127.0.0.1:8088/titles/?key={key}",
-        data=new_data,
-        # data={"Дата.Text": "111111111111111123sad"},
-    )
-    # print(result.text)
+    requests.post(f"http://127.0.0.1:8088/titles/?key={key}", data=new_data)
+    requests.get(f"http://127.0.0.1:8088/api/?function=CutDirect&input={number}")
 
 
 def update_data(upd_data):
@@ -86,6 +88,7 @@ def connect_vmix(tab_titles):
             for i in inputs:
                 key_input = i["@key"]
                 name_input = i["#text"]
+                number_input = i["@number"]
                 text_input = (
                     [None]
                     if "text" not in i
@@ -107,6 +110,7 @@ def connect_vmix(tab_titles):
                 temp_data_input.append(
                     {
                         "@key": key_input,
+                        "@number": number_input,
                         "#text": name_input,
                         "data": [
                             text_input if len(text_input) > 0 else None,
@@ -172,6 +176,7 @@ def connect_vmix(tab_titles):
                                 "@key": selected_row["@key"].values[0],
                                 "@title": selected_row["#text"].values[0],
                                 "data": json_change,
+                                "@number": selected_row["@number"].values[0],
                             }
                         )
 
@@ -363,16 +368,19 @@ def main():
                     "Счёт1": st.column_config.NumberColumn(width="small"),
                     "Счёт2": st.column_config.NumberColumn(width="small"),
                 }
+            # temp_photo = []
             elif select_box == "Игроки":
                 column_config = {"Фото": st.column_config.ImageColumn()}
                 for i, row in df_data_json.iterrows():
                     try:
                         imgExtn = row["Фото"][-4:]
+                        row[
+                            "Фото"
+                        ] = f"data:image/{imgExtn};base64," + fs.ReadPictureFile(
+                            row["Фото"]
+                        )
                     except TypeError:
-                        imgExtn = "png"
-                    row["Фото"] = f"data:image/{imgExtn};base64," + fs.ReadPictureFile(
-                        row["Фото"]
-                    )
+                        row["Фото"] = None
 
             df_edit = nard_col2.data_editor(
                 df_data_json,
@@ -385,6 +393,11 @@ def main():
                 else 34 * len(df_data_json.values),
                 column_config=column_config,
             )
+
+            for i, row in df_edit.iterrows():
+                encoded_photo_data = base64.b64encode(row["Фото"].split(";base64,")[-1].encode())
+                row["Фото"] = encoded_photo_data.decode()
+            print(df_edit)
 
             if save_change_nard:
                 temp_json = df_edit.to_json(orient="records")
@@ -444,10 +457,10 @@ def main():
                     with open(nard_path, "w", encoding="utf-8") as outfile:
                         json.dump(data_json, outfile, ensure_ascii=False, indent=4)
 
+            # keyboard.add_hotkey("Ctrl+Shift", post_url("ID", path_scenario_json))
             with col_nard2_2:
-                btn_ID = st.button(
-                    "Игрок1", on_click=post_url("ID", path_scenario_json)
-                )
+                if st.button("Игрок1"):
+                    post_url("ID", path_scenario_json)
 
 
 if __name__ == "__main__":
