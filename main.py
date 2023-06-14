@@ -1,36 +1,25 @@
-import streamlit as st
-import pandas as pd
-import requests
 import os
 import json
-from st_aggrid import AgGrid, GridUpdateMode
-from st_aggrid.grid_options_builder import GridOptionsBuilder
+import requests
 import xmltodict
 import funcs as fs
+import pandas as pd
+import importlib.util
+import streamlit as st
 from datetime import datetime
-import keyboard
-import base64
+from st_aggrid import AgGrid, GridUpdateMode, ColumnsAutoSizeMode
+from st_aggrid.grid_options_builder import GridOptionsBuilder
 
+# import streamlit.components.v1 as components
 
 
 st.set_page_config(
-    page_title="vMix Titler Not 3D",
+    page_title="vMix",
     page_icon="📠",
     layout="wide",
     initial_sidebar_state="expanded",
-    menu_items={"About": "версия 2023.06 от 05.06.2023"},
+    menu_items={"About": "версия 2023.06 от 14.06.2023"},
 )
-
-
-# Функция для отправки команды к vMix по API
-def send_command(command):
-    # Здесь необходимо заменить <VMIX_IP> на IP-адрес вашего vMix
-    url = f"http://127.0.0.1:8088/API/?Function={command}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        st.success(f"Команда '{command}' отправлена успешно!")
-    else:
-        st.error(f"Ошибка при отправке команды '{command}'.")
 
 
 def post_url(btn, path):
@@ -40,7 +29,6 @@ def post_url(btn, path):
     number = None
     for i in scenario_json:
         if i["@title"] == btn:
-            print()
             data = i["data"]
             key = i["@key"]
             number = i["@number"]
@@ -51,36 +39,30 @@ def post_url(btn, path):
     new_data["Update"] = "Update"
     print(f"http://127.0.0.1:8088/titles/?key={key}", new_data)
     requests.post(f"http://127.0.0.1:8088/titles/?key={key}", data=new_data)
-    requests.get(f"http://127.0.0.1:8088/api/?function=CutDirect&input={number}")
+    # requests.get(f"http://127.0.0.1:8088/api/?function=PreviewInput&input={number}")
+    # requests.get(f"http://127.0.0.1:8088/api/?function=PreviewOverlayInput1&input={1}")
+    # requests.get(f"http://127.0.0.1:8088/api/?function=CutDirect&input={number}")
 
 
-def update_data(upd_data):
-    for i in upd_data:
-        post_url(i)
-        print(i)
-
-    # url = f"http://127.0.0.1:8088/titles/?key={i['@key']}"
-
-    # res = requests.post(
-    #     url, data={f'txt{upd_data["@name"]}': upd_data["#text"], "Update": "Update"}
-    # )
-    # print(res)
+def on_efir():
+    requests.get(f"http://127.0.0.1:8088/api/?function=OverlayInput4")
 
 
 def connect_vmix(tab_titles):
     with tab_titles:
-        # if st.button("Подключиться к vMix"):
         titles_col1, titles_col2 = st.columns((1.5, 8.5))
         try:
             url_api = "http://127.0.0.1:8088/api"
             response = requests.get(url_api)
             data_dict = xmltodict.parse(response.text)
-            # with open("vMixClientTitler/preset.json", "w", encoding="utf-8") as f:
-            #     json.dump(data_dict, f, ensure_ascii=False, indent=4)
+            with open("vMixClientTitler\\api.json", "w", encoding="utf-8") as outfile:
+                json.dump(data_dict, outfile, ensure_ascii=False, indent=4)
 
-            temp_name = data_dict["vmix"]["preset"].split("\\")[-1].replace(".vmix", "")
-            path_scenario_json = f"vMixClientTitler/scenario_{temp_name}.json"
+            temp_path = data_dict["vmix"]["preset"].split("\\")
+            temp_name = temp_path[-1].replace(".vmix", "")
+            path_to_folder = "\\".join(temp_path[:-1]) + "\\python\\"
 
+            path_scenario_json = f"{path_to_folder}\\{temp_name}.json"
             scenario_json = scenario_get_json(path_scenario_json)
             inputs = data_dict["vmix"]["inputs"]["input"]
 
@@ -130,10 +112,6 @@ def connect_vmix(tab_titles):
                         df_2 = pd.json_normalize(i["data"][0])
                         if "Переменная" not in df_2:
                             df_2["Переменная"] = None
-                        # df_2["Переменная"] = df_2["Переменная"].astype("category")
-                        # df_2["Переменная"] = pd.Categorical(
-                        #     df_2["Переменная"], categories=new_categories
-                        # )
 
             with titles_col2:
                 if "@index" in df_2:
@@ -188,7 +166,35 @@ def connect_vmix(tab_titles):
 
         except requests.exceptions.ConnectionError:
             st.error("Не включен vMix")
-    return path_scenario_json
+        except KeyError:
+            st.error("Не загружен проект vMix")
+
+
+def connect_vmix_2():
+    try:
+        url_api = "http://127.0.0.1:8088/api"
+        response = requests.get(url_api)
+        data_dict = xmltodict.parse(response.text)
+
+        temp_name = data_dict["vmix"]["preset"].split("\\")
+        path_to_folder = "\\".join(temp_name[:-1]) + "\\python\\"
+        if os.path.exists(path_to_folder):
+            files = os.listdir(path_to_folder)
+            if files:
+                for file in files:
+                    file_temp = file.split(".")
+                    file_extn = file_temp[-1]
+                    file_name = file_temp[0]
+                    if file_extn == "py":
+                        module_name = file_name
+                        spec = importlib.util.spec_from_file_location(
+                            module_name, os.path.join(path_to_folder, file)
+                        )
+                        module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(module)
+                        return module, path_to_folder
+    except requests.exceptions.ConnectionError:
+        pass
 
 
 def scenario_get_json(path_scenario_json):
@@ -201,29 +207,37 @@ def scenario_get_json(path_scenario_json):
     return scenario_json
 
 
+def on_key_press(event):
+    st.write(f"Нажата клавиша: {event.name}")
+
+
 def main():
-    variable_json = "vMixClientTitler/variables.json"
+    variable_json = ""
     st.session_state["data"] = None
 
-    placeholder = st.empty()
-    # c = placeholder.container()
-    (
-        tab_editor,
-        tab_variable,
-        tab_cash,
-        tab_titles,
-        tab_nard,
-    ) = placeholder.tabs(
-        [
-            "✏️Редактор",
-            "📝Переменные",
-            "🗄️Кэш-данные",
-            "📝Список титров и кнопок",
-            "🎲🟢🟡Нарды",
-        ]
-    )
+    st.button("выдать", on_click=on_efir)
 
-    with tab_editor:
+    placeholder = st.empty()
+    c = placeholder.container()
+
+    existing_tabs = [
+        "✏️Редактор",
+        "📝Переменные",
+        "🗄️Кэш-данные",
+        "📝Список титров и кнопок",
+    ]
+    try:
+        module, path_to_folder = connect_vmix_2()
+        if module:
+            variable_json = path_to_folder + "variables.json"
+            if module.NAME:
+                existing_tabs.append(module.NAME)
+    except Exception:
+        pass
+
+    t_ = c.tabs(existing_tabs)
+
+    with t_[0]:
         ed_editor_col1, ed_editor_col2 = st.columns((5, 5))
         with ed_editor_col1:
             with st.expander("📁Загрузка файла"):
@@ -255,23 +269,54 @@ def main():
                 temp_data[i] = None
         st.session_state["data"] = temp_data
 
-        gd = GridOptionsBuilder.from_dataframe(df)
-        gd.configure_selection(selection_mode="multiple")
-        gd.configure_default_column(editable=True, groupable=True)
-        gd.configure_pagination(enabled=True)
-        gridoptions = gd.build()
-
+        new_columns = []
+        # pinned_row_data = [None]
+        new_columns_2 = [i for i in list(df.columns)]
+        for i in list(df.columns):
+            new_columns.append(
+                {
+                    "field": i,
+                    "filter": "agSetColumnFilter",
+                    "filterParams": "filterParams",
+                }
+            )
+        grid_options = {
+            "columnDefs": new_columns,
+            "defaultColDef": {
+                "sortable": True,
+                "resizable": True,
+                "enableRowGroup": True,
+                "flex": 1,
+                "floatingFilter": True,
+                "editable": True,
+            },
+            "sideBar": {
+                "toolPanels": ["columns"],
+            },
+            "rowDragManaged": True,
+            "rowDragEntireRow": True,
+            "rowDragMultiRow": True,
+            "rowSelection": "multiple",
+            "animateRows": True,
+            "rowGroupPanelShow": "always",
+            "pagination": True,
+            "paginationPageSize": 15,
+            "headerHeight": 50,
+            "floatingFiltersHeight": 50,
+            "pivotHeaderHeight": 50,
+        }
+        custom_css = {}
         grid_table = AgGrid(
             df,
-            gridOptions=gridoptions,
-            update_mode=GridUpdateMode.SELECTION_CHANGED,
+            grid_options,
+            custom_css=custom_css,
         )
         data = grid_table["selected_rows"]
         if data:
             del data[0]["_selectedRowNodeInfo"]
             st.session_state["data"] = data[0]
 
-    with tab_variable:
+    with t_[1]:
         with st.expander("🔣Примеры"):
             code_example = "'НиЧеГо' if 'имя' not in d$ else d$['имя'].split() if ' ' in d$['имя'] else d$['имя']"
             st.write(
@@ -298,13 +343,13 @@ def main():
         if variable_add_button:
             var_json = fs.data_cash(var_json)
             with open(
-                "vMixClientTitler/variables.json",
+                variable_json,
                 "w",
                 encoding="utf-8",
             ) as outfile:
                 json.dump(var_json, outfile, ensure_ascii=False, indent=4)
 
-    with tab_cash:
+    with t_[2]:
         if os.path.exists(variable_json):
             var_json = fs.load_json_data(variable_json)
         try:
@@ -313,154 +358,11 @@ def main():
             pass
         st.session_state
 
-    path_scenario_json = connect_vmix(tab_titles)
+    connect_vmix(t_[3])
 
-    with tab_nard:
-        nard_path = "vMixClientTitler/nard.json"
-        data_json = fs.load_json_data(nard_path)
-        with st.sidebar:
-            st.checkbox("Сегодня", value=True, key="Today")
-            df_temp = pd.json_normalize(data_json["schedule"])
-            if st.session_state["Today"] is True:
-                df_temp = df_temp.loc[
-                    df_temp["Дата"].str[:10] == str(datetime.now())[:10]
-                ]
-            name_selectbox = (
-                df_temp["Игрок1"]
-                + " — "
-                + df_temp["Игрок2"]
-                + " ["
-                + df_temp["Дата"].str.replace("T", " ").str[:16]
-                + "]"
-            )
-            select_row = st.selectbox("Выбор матча", name_selectbox)
-
-        tab_nard_1, tab_nard_2 = tab_nard.tabs(["✏️Редактор", "📇Основная"])
-        with tab_nard_1:
-            nard_list = {
-                "Игроки": "players",
-                "Расписание": "schedule",
-                "Игра": "games",
-            }
-            nard_col1, nard_col2 = st.columns((1.5, 8.5))
-            select_box = nard_col1.selectbox("Выбор", list(nard_list.keys()))
-            save_change_nard = nard_col1.button("💾Сохранить  изменения")
-            selected_row = nard_list[select_box]
-            df_data_json = pd.json_normalize(data_json[selected_row])
-            name_lastname = []
-            for i in data_json["players"]:
-                name_lastname.append(f'{i["Имя"].strip()} {i["Фамилия"].strip()}')
-            column_config = None
-            if select_box == "Расписание":
-                df_data_json["Дата"] = pd.to_datetime(
-                    df_data_json["Дата"], format="%Y-%m-%dT%H:%M:%S"
-                )
-                column_config = {
-                    "Игрок1": st.column_config.SelectboxColumn(
-                        options=name_lastname, width="medium"
-                    ),
-                    "Игрок2": st.column_config.SelectboxColumn(
-                        options=name_lastname, width="medium"
-                    ),
-                    "Дата": st.column_config.DatetimeColumn(
-                        format="DD.MM.YYYY HH:mm", width="medium"
-                    ),
-                    "Счёт1": st.column_config.NumberColumn(width="small"),
-                    "Счёт2": st.column_config.NumberColumn(width="small"),
-                }
-            # temp_photo = []
-            elif select_box == "Игроки":
-                column_config = {"Фото": st.column_config.ImageColumn()}
-                for i, row in df_data_json.iterrows():
-                    try:
-                        imgExtn = row["Фото"][-4:]
-                        row[
-                            "Фото"
-                        ] = f"data:image/{imgExtn};base64," + fs.ReadPictureFile(
-                            row["Фото"]
-                        )
-                    except TypeError:
-                        row["Фото"] = None
-
-            df_edit = nard_col2.data_editor(
-                df_data_json,
-                num_rows="dynamic",
-                hide_index=False,
-                height=None
-                if len(df_data_json.values) <= 10
-                else 39 * len(df_data_json.values)
-                if len(df_data_json.values) <= 20
-                else 34 * len(df_data_json.values),
-                column_config=column_config,
-            )
-
-            for i, row in df_edit.iterrows():
-                encoded_photo_data = base64.b64encode(row["Фото"].split(";base64,")[-1].encode())
-                row["Фото"] = encoded_photo_data.decode()
-            print(df_edit)
-
-            if save_change_nard:
-                temp_json = df_edit.to_json(orient="records")
-                temp_json = json.loads(temp_json)
-
-                for item in temp_json:
-                    if "Дата" in item:
-                        item["Дата"] = datetime.fromtimestamp(
-                            (item["Дата"] - 10800000) / 1000
-                        ).strftime("%Y-%m-%dT%H:%M:%S")
-                data_json[selected_row] = temp_json
-                with open(nard_path, "w", encoding="utf-8") as outfile:
-                    json.dump(data_json, outfile, ensure_ascii=False, indent=4)
-
-        with tab_nard_2:
-            statistic1 = {
-                "Счёт": None,
-                "Ошибок (зевков)": None,
-                "Эквити ошибок": None,
-                "Ошибок удвоений (зевков)": None,
-                "Эквити ошибок удвоений": None,
-                "Ошибок взятий (зевков)": None,
-                "Эквити ошибок взятий": None,
-                "Сумма эквити": None,
-                "Удача (джокер)": None,
-                "Качество игры (PR)": None,
-            }
-            statistic2 = statistic1
-            col_nard2_1, col_nard2_2 = st.columns((3, 7))
-            with col_nard2_1:
-                columns = list(statistic1.keys())
-                val1 = list(statistic1.values())
-                val2 = list(statistic2.values())
-                df_game = pd.DataFrame(
-                    {
-                        "Название": columns,
-                        "Игрок1": val1,
-                        "Игрок2": val2,
-                    }
-                )
-                df_game_2 = col_nard2_1.data_editor(
-                    df_game,
-                )
-
-                game_json = df_game_2.to_json(orient="index")
-                game_json = json.loads(game_json)
-
-                st.session_state["game"] = game_json
-                score1 = game_json["0"]["Игрок1"]
-                score2 = game_json["0"]["Игрок2"]
-                for i in data_json["schedule"]:
-                    temp = f'{i["Игрок1"]} — {i["Игрок2"]} [{i["Дата"].replace("T", " ")[:16]}]'
-                    if temp == select_row:
-                        i["Счёт1"] = score1
-                        i["Счёт2"] = score2
-                if col_nard2_1.button("💾Сохранить счёт"):
-                    with open(nard_path, "w", encoding="utf-8") as outfile:
-                        json.dump(data_json, outfile, ensure_ascii=False, indent=4)
-
-            # keyboard.add_hotkey("Ctrl+Shift", post_url("ID", path_scenario_json))
-            with col_nard2_2:
-                if st.button("Игрок1"):
-                    post_url("ID", path_scenario_json)
+    module.main(t_[-1], path_to_folder)
+    # except Exception:
+    #     pass
 
 
 if __name__ == "__main__":

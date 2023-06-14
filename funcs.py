@@ -1,9 +1,9 @@
-import streamlit as st
-import pandas as pd
 import json
+import base64
+import pandas as pd
+import streamlit as st
 from io import BytesIO
 from datetime import datetime
-import base64
 
 
 @st.cache_data
@@ -16,6 +16,25 @@ def load_json_data(data_json):
     with open(data_json, "r", encoding="utf-8") as file:
         temp_json = json.load(file)
     return temp_json
+
+
+def save_to_json(path_to_file, block, df_edit):
+    try:
+        temp_json = df_edit.to_json(orient="records")
+        temp_json = json.loads(temp_json)
+
+        for item in temp_json:
+            if "Дата" in item:
+                item["Дата"] = datetime.fromtimestamp(
+                    (item["Дата"] - 10800000) / 1000
+                ).strftime("%Y-%m-%dT%H:%M:%S")
+    except AttributeError:
+        temp_json = df_edit
+
+    data_json = load_json_data(path_to_file)
+    data_json[block] = temp_json
+    with open(path_to_file, "w", encoding="utf-8") as outfile:
+        json.dump(data_json, outfile, ensure_ascii=False, indent=4)
 
 
 def data_cash(var_json):
@@ -55,8 +74,8 @@ def to_excel(df):
     return processed_data
 
 
-def ReadPictureFile(wch_fl):
+def ReadPictureFile(path_file):
     try:
-        return base64.b64encode(open(wch_fl, "rb").read()).decode()
+        return base64.b64encode(open(path_file, "rb").read()).decode()
     except:
         return ""
