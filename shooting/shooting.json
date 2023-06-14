@@ -1,0 +1,177 @@
+{
+    "players": [
+        {
+            "id": 1,
+            "name": "Илья",
+            "lastname": "Виноградов",
+            "year_birth": 1993,
+            "region_id": 1
+        },
+        {
+            "id": 2,
+            "name": "Артём",
+            "lastname": "Копыстынский",
+            "year_birth": 1989,
+            "region_id": 2
+        },
+        {
+            "id": 3,
+            "name": "Максим",
+            "lastname": "Смыков",
+            "year_birth": 1992,
+            "region_id": 1
+        },
+        {
+            "id": 4,
+            "name": "Алексей",
+            "lastname": "Гуляев",
+            "year_birth": 1991,
+            "region_id": 1
+        },
+        {
+            "id": 5,
+            "name": "Валентин",
+            "lastname": "Кочуров",
+            "year_birth": 1999,
+            "region_id": 3
+        },
+        {
+            "id": 6,
+            "name": "Алексей",
+            "lastname": "Березюк",
+            "year_birth": 1976,
+            "region_id": 4
+        },
+        {
+            "id": 7,
+            "name": "Максим",
+            "lastname": "Кабацкий",
+            "year_birth": 1996,
+            "region_id": 5
+        },
+        {
+            "id": 8,
+            "name": "Игорь",
+            "lastname": "Чуфаров",
+            "year_birth": 1964,
+            "region_id": 6
+        }
+    ],
+    "rounds": [
+        {
+            "id": 1,
+            "name_rus": "финал",
+            "name_eng": null
+        },
+        {
+            "id": 2,
+            "name_rus": "бронзовый медальный матч",
+            "name_eng": null
+        },
+        {
+            "id": 3,
+            "name_rus": "золотой медальный матч",
+            "name_eng": null
+        },
+        {
+            "id": 4,
+            "name_rus": "бронзовый медальный матч 1",
+            "name_eng": null
+        },
+        {
+            "id": 5,
+            "name_rus": "бронзовый медальный матч 2",
+            "name_eng": null
+        }
+    ],
+    "genders": [
+        {
+            "id": 1,
+            "name_rus": "мужчины",
+            "name_eng": null
+        },
+        {
+            "id": 2,
+            "name_rus": "женщины",
+            "name_eng": null
+        },
+        {
+            "id": 3,
+            "name_rus": "пара смешанная",
+            "name_eng": null
+        },
+        {
+            "id": 4,
+            "name_rus": "юниоры",
+            "name_eng": null
+        },
+        {
+            "id": 5,
+            "name_rus": "юниорки",
+            "name_eng": null
+        }
+    ],
+    "competitions": [
+        {
+            "id": 1,
+            "name_rus": "трап",
+            "name_eng": null
+        },
+        {
+            "id": 2,
+            "name_rus": "скит",
+            "name_eng": null
+        }
+    ],
+    "regions": [
+        {
+            "id": 1,
+            "name_rus": "Липецкая область",
+            "name_eng": null
+        },
+        {
+            "id": 2,
+            "name_rus": "Республика Татарстан",
+            "name_eng": null
+        },
+        {
+            "id": 3,
+            "name_rus": "Челябинская область",
+            "name_eng": null
+        },
+        {
+            "id": 4,
+            "name_rus": "г. Санкт-Петербург",
+            "name_eng": null
+        },
+        {
+            "id": 5,
+            "name_rus": "г. Москва",
+            "name_eng": null
+        },
+        {
+            "id": 6,
+            "name_rus": "Свердловская область",
+            "name_eng": null
+        },
+        {
+            "id": 7,
+            "name_rus": "Новосибирская область",
+            "name_eng": null
+        },
+        {
+            "id": 8,
+            "name_rus": "Курганская область",
+            "name_eng": null
+        }
+    ],
+    "events": [
+        {
+            "id": 1,
+            "competition_id": 1,
+            "round_id": 1,
+            "gender_id": 1,
+            "date": "2023-06-14T20:41:51.000"
+        }
+    ]
+}
